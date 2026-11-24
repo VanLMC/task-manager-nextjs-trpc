@@ -1,10 +1,21 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { createInMemoryTaskRepository } from '@/server/tasks/in-memory-task.repository';
 import { renderWithProviders } from '@/test/renderWithProviders';
 import { createTestContext } from '@/test/server-context';
 import { TaskList } from './TaskList';
 
+function createTickingClock() {
+  let now = Date.parse('2026-01-01T12:00:00.000Z');
+  return () => {
+    now += 1_000;
+    return new Date(now);
+  };
+}
+
 async function renderWithTasks(titles: string[]) {
-  const context = createTestContext();
+  const context = createTestContext({
+    taskRepository: createInMemoryTaskRepository({ now: createTickingClock() }),
+  });
   for (const title of titles) await context.taskRepository.create({ title });
   const rendered = renderWithProviders(<TaskList />, context);
   await screen.findByRole('heading', { name: titles.at(-1) });
