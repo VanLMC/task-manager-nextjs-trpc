@@ -56,7 +56,7 @@ export function TaskCard({ task, isBusy, onToggle, onDelete }: TaskCardProps) {
         </Stack>
       </CardContent>
       <CardActions sx={{ justifyContent: 'flex-end' }}>
-        <Button component={Link} href={`/tasks/${task.id}/edit`} size="small">
+        <Button component={Link} href={`/tasks/${task.id}/edit`} prefetch={false} size="small">
           Edit
         </Button>
         <Button
