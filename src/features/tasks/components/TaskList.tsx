@@ -1,7 +1,9 @@
 'use client';
 
 import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -9,13 +11,15 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { useDeleteTask } from '@/features/tasks/hooks/useDeleteTask';
+import { useInView } from '@/features/tasks/hooks/useInView';
 import { useToggleTask } from '@/features/tasks/hooks/useToggleTask';
 import { taskListInput, taskListPaging } from '@/features/tasks/task-list-query';
 import { toUserMessage } from '@/shared/errors/toUserMessage';
 import { useTRPC } from '@/trpc/client';
 import { TaskCard } from './TaskCard';
+import { TaskSearch } from './TaskSearch';
 
-export function TaskList({ query }: { query?: string }) {
+export function TaskList({ query = '' }: { query?: string }) {
   const trpc = useTRPC();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const tasksQuery = useInfiniteQuery(
@@ -27,6 +31,12 @@ export function TaskList({ query }: { query?: string }) {
   });
 
   const tasks = tasksQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = tasksQuery;
+  const canLoadMore = hasNextPage && !isFetchingNextPage && !tasksQuery.isFetchNextPageError;
+  const sentinelRef = useInView<HTMLDivElement>(() => fetchNextPage(), {
+    enabled: canLoadMore,
+    resetKey: tasks.length,
+  });
 
   return (
     <Stack spacing={3}>
@@ -44,6 +54,8 @@ export function TaskList({ query }: { query?: string }) {
           New task
         </Button>
       </Stack>
+
+      <TaskSearch query={query} />
 
       {tasksQuery.isError && (
         <Alert
@@ -75,6 +87,20 @@ export function TaskList({ query }: { query?: string }) {
           />
         ))}
       </Stack>
+
+      <Box ref={sentinelRef} sx={{ display: 'flex', justifyContent: 'center', minHeight: 40 }}>
+        {isFetchingNextPage && <CircularProgress size={28} aria-label="Loading more tasks" />}
+        {canLoadMore && (
+          <Button variant="outlined" onClick={() => fetchNextPage()}>
+            Load more
+          </Button>
+        )}
+        {!hasNextPage && tasksQuery.data && tasksQuery.data.pages.length > 1 && (
+          <Typography variant="body2" color="text.secondary">
+            You have reached the end of the list.
+          </Typography>
+        )}
+      </Box>
     </Stack>
   );
 }

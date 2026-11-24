@@ -4,6 +4,11 @@ import { renderWithProviders } from '@/test/renderWithProviders';
 import { createTestContext } from '@/test/server-context';
 import { TaskList } from './TaskList';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => '/tasks',
+}));
+
 function createTickingClock() {
   let now = Date.parse('2026-01-01T12:00:00.000Z');
   return () => {
@@ -97,5 +102,33 @@ describe('TaskList', () => {
     await user.click(await screen.findByRole('button', { name: 'Retry' }));
 
     expect(await screen.findByText('No tasks yet.')).toBeInTheDocument();
+  });
+});
+
+describe('TaskList paging and search', () => {
+  it('loads the next page with the Load more fallback', async () => {
+    const titles = Array.from({ length: 12 }, (_, index) => `Task ${index + 1}`);
+    const { user } = await renderWithTasks(titles);
+    expect(screen.getAllByRole('article')).toHaveLength(10);
+
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+
+    expect(await screen.findByRole('article', { name: 'Task 1' })).toBeInTheDocument();
+    expect(screen.getAllByRole('article')).toHaveLength(12);
+    expect(screen.getByText('You have reached the end of the list.')).toBeInTheDocument();
+  });
+
+  it('shows only matching tasks and a search-specific empty state', async () => {
+    const context = createTestContext();
+    await context.taskRepository.create({ title: 'Plan the trip' });
+    await context.taskRepository.create({ title: 'Buy milk' });
+    const { unmount } = renderWithProviders(<TaskList query="plan" />, context);
+
+    expect(await screen.findByRole('article', { name: 'Plan the trip' })).toBeInTheDocument();
+    expect(screen.queryByRole('article', { name: 'Buy milk' })).not.toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<TaskList query="nothing" />, context);
+    expect(await screen.findByText('No tasks match “nothing”.')).toBeInTheDocument();
   });
 });
