@@ -1,12 +1,20 @@
 import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
+import { TaskList } from '@/features/tasks/components/TaskList';
+import { taskListInput, taskListPaging } from '@/features/tasks/task-list-query';
+import { getQueryClient, HydrateClient, trpc } from '@/trpc/server';
 
-export default function TasksPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function TasksPage() {
+  await getQueryClient().prefetchInfiniteQuery(
+    trpc.task.list.infiniteQueryOptions(taskListInput(), taskListPaging),
+  );
+
   return (
     <Container maxWidth="md" component="main" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1">
-        Tasks
-      </Typography>
+      <HydrateClient>
+        <TaskList />
+      </HydrateClient>
     </Container>
   );
 }
