@@ -10,6 +10,15 @@ export function handleTrpcRequest(request: Request, createContext: () => Context
     req: request,
     router: appRouter,
     createContext,
+    onError: ({ error, path, ctx }) => {
+      if (error.code !== 'INTERNAL_SERVER_ERROR') return;
+      ctx?.logger.log({
+        event: 'trpc.internal_error',
+        requestId: ctx.requestId,
+        path,
+        message: error.message,
+      });
+    },
     responseMeta: ({ ctx }) => ({
       headers: ctx ? new Headers({ 'x-request-id': ctx.requestId }) : undefined,
     }),

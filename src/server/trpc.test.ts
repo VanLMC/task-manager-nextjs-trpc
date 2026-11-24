@@ -1,9 +1,9 @@
 import { readRequestMetadata } from './trpc';
 
 describe('readRequestMetadata', () => {
-  it('uses the first forwarded IP and the incoming request id', () => {
+  it('trusts only the proxy-appended (last) forwarded IP and keeps the request id', () => {
     const headers = new Headers({
-      'x-forwarded-for': '198.51.100.7, 10.0.0.1',
+      'x-forwarded-for': '6.6.6.6, 198.51.100.7',
       'x-request-id': 'abc',
     });
 

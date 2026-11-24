@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type { LogEvent, Logger } from '@/server/observability/logger';
 import { createFixedWindowRateLimiter } from '@/server/rate-limit/fixed-window-rate-limiter';
+import { INTERNAL_ERROR_MESSAGE } from '@/server/trpc';
 import { createCaller, createInProcessClient, createTestContext } from '@/test/server-context';
 import { MAX_STORED_TASKS } from './task.router';
 
@@ -119,6 +120,21 @@ describe('task API over HTTP', () => {
     await expect(client.task.create.mutate({ title: '' })).rejects.toMatchObject({
       data: { code: 'BAD_REQUEST', httpStatus: 400, fieldErrors: { title: ['Title is required'] } },
     });
+  });
+
+  it('hides internal error details from clients and logs them instead', async () => {
+    const events: LogEvent[] = [];
+    const context = createTestContext({ logger: { log: (event) => events.push(event) } });
+    vi.spyOn(context.taskRepository, 'list').mockRejectedValue(new Error('disk quota exceeded'));
+    const client = createInProcessClient(context);
+
+    await expect(client.task.list.query({})).rejects.toMatchObject({
+      message: INTERNAL_ERROR_MESSAGE,
+      data: { code: 'INTERNAL_SERVER_ERROR' },
+    });
+    expect(events).toContainEqual(
+      expect.objectContaining({ event: 'trpc.internal_error', message: 'disk quota exceeded' }),
+    );
   });
 
   it('keeps dates as Date objects across the wire', async () => {
