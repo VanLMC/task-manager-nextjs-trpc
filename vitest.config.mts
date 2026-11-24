@@ -21,6 +21,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/server/**', 'src/features/**'],
       exclude: ['**/*.test.*', '**/*.contract.ts'],
+      thresholds: { lines: 90, branches: 85, functions: 90, statements: 90 },
     },
   },
 });
