@@ -124,3 +124,27 @@ for (const colorScheme of ['light', 'dark'] as const) {
     }
   });
 }
+
+test('lets keyboard users skip straight to the main content', async ({ page }) => {
+  await page.goto('/tasks');
+  await page.getByRole('article').first().waitFor();
+
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: 'Skip to main content' });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeInViewport();
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+});
+
+test('turns off animations when the user prefers reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/tasks');
+
+  const duration = await page
+    .getByRole('link', { name: 'New task' })
+    .evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration));
+
+  expect(duration).toBeLessThan(0.001);
+});

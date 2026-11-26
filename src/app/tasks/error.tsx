@@ -3,10 +3,17 @@
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
+import { MAIN_CONTENT_ID } from '@/shared/ui/SkipLink';
 
 export default function TasksError({ reset }: { error: Error; reset: () => void }) {
   return (
-    <Container maxWidth="md" component="main" sx={{ py: 4 }}>
+    <Container
+      maxWidth="md"
+      component="main"
+      id={MAIN_CONTENT_ID}
+      tabIndex={-1}
+      sx={{ py: 4, outline: 'none' }}
+    >
       <Alert
         severity="error"
         action={
