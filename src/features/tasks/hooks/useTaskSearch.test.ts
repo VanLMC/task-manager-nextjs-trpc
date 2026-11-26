@@ -36,6 +36,21 @@ describe('useTaskSearch', () => {
     expect(replace).toHaveBeenCalledWith('/tasks', { scroll: false });
   });
 
+  it('keeps what the user typed while the previous search is still loading', () => {
+    const { result, rerender } = renderHook(({ query }) => useTaskSearch(query), {
+      initialProps: { query: '' },
+    });
+    act(() => result.current.setValue('rev'));
+    act(() => vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS));
+
+    act(() => result.current.setValue('review'));
+    rerender({ query: 'rev' });
+
+    expect(result.current.value).toBe('review');
+    act(() => vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS));
+    expect(replace).toHaveBeenLastCalledWith('/tasks?q=review', { scroll: false });
+  });
+
   it('follows the URL when it changes through navigation', () => {
     const { result, rerender } = renderHook(({ query }) => useTaskSearch(query), {
       initialProps: { query: 'first' },

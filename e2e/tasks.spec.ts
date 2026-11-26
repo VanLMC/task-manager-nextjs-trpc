@@ -59,6 +59,18 @@ test.describe('task list', () => {
   });
 });
 
+test('keeps typing intact while an earlier search is still loading', async ({ page }) => {
+  await page.goto('/tasks');
+  const search = page.getByRole('searchbox', { name: 'Search by title' });
+
+  await search.pressSequentially('pl');
+  await page.waitForTimeout(350);
+  await search.pressSequentially('an the', { delay: 40 });
+
+  await expect(page).toHaveURL(/\?q=plan(%20|\+)the$/);
+  await expect(search).toHaveValue('plan the');
+});
+
 test('creates, completes, edits, deletes and restores a task', async ({ page }) => {
   const title = `E2E task ${Date.now()}`;
   await page.goto('/tasks/new');
