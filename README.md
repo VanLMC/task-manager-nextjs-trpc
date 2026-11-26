@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/VanLMC/task-manager-nextjs-trpc/actions/workflows/ci.yml/badge.svg)](https://github.com/VanLMC/task-manager-nextjs-trpc/actions/workflows/ci.yml)
 
+**Live demo:** https://task-manager-nextjs-trpc.onrender.com (free instance: the first visit after a quiet period can take up to a minute)
+
 A small task manager with an in-memory backend exposed through tRPC. The task list is rendered on the server, then the client takes over with TanStack Query for infinite scrolling, search and optimistic updates.
 
 <picture>
