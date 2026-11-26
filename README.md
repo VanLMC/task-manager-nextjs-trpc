@@ -9,6 +9,14 @@ A small task manager with an in-memory backend exposed through tRPC. The task li
   <img alt="Task list with search, completed toggle, edit and delete actions" src=".github/assets/task-list-light.png">
 </picture>
 
+## Deploy
+
+The app keeps its data in memory, so it must run as **one long-lived Node process** (not serverless functions). `render.yaml` describes a free Render web service that does exactly that:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/VanLMC/task-manager-nextjs-trpc)
+
+On the free plan the service sleeps after 15 minutes without traffic; the first request afterwards can take up to a minute and starts again from the sample tasks.
+
 ## Quick start
 
 Requires Node.js 24 (see `.nvmrc`).
@@ -56,7 +64,7 @@ The store starts with 30 fictional tasks so scrolling and search can be tried ri
 | **Bonus:** infinite scroll | `useInView` (IntersectionObserver) + cursor pagination, with a "Load more" fallback |
 | **Bonus:** documentation | This file and comments on non-obvious decisions |
 
-Beyond the brief: mark tasks as completed, search by title kept in the URL (`/tasks?q=…`), dark mode that follows the OS, undo on delete, conflict detection on edits, rate limiting, structured logs, a nonce-based Content Security Policy and a Docker image.
+Beyond the brief: mark tasks as completed, search by title kept in the URL (`/tasks?q=…`), dark mode that follows the OS, a skip link and reduced-motion support, undo on delete, conflict detection on edits, rate limiting, structured logs, a nonce-based Content Security Policy and a Docker image.
 
 ### Field names
 
@@ -162,7 +170,7 @@ How the trade-offs discussed in the theory part are handled in this code:
 | Repository contract | Vitest + fast-check | A suite any `TaskRepository` must pass, including **property-based tests**: for any random history of creates and deletes, paging returns every task exactly once and in order |
 | API | Vitest + `createCaller` | Validation, `NOT_FOUND`, `CONFLICT`, store limit, rate limit, logging, error masking |
 | Components and hooks | Testing Library | Forms, list, toggle, delete with undo, conflicts, search, scrolling. They talk to the **real router in-process** (no HTTP mocks) |
-| End to end | Playwright + axe | SSR with JavaScript disabled, no refetch on load, infinite scroll, search, full CRUD with undo, real 404, security headers, accessibility in light and dark mode |
+| End to end | Playwright + axe | SSR with JavaScript disabled, no refetch on load, infinite scroll, search, full CRUD with undo, real 404, security headers, accessibility in light and dark mode, skip link, reduced motion |
 
 CI runs lint, type-check, unit tests with coverage thresholds, the production build, the end-to-end tests, a Docker build and a gitleaks scan of the full history.
 
